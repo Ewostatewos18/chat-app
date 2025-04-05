@@ -1,8 +1,18 @@
+"use client";
+import { useEffect, useState } from "react";
+import { signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { auth, googleProvider } from "../firebase/firebase";
-import { signInWithPopup, signOut } from "firebase/auth";
 
 const Auth = () => {
-  const signIn = async () => {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+  }, []);
+
+  const handleGoogleSignIn = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
@@ -10,10 +20,20 @@ const Auth = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    signOut(auth);
+  };
+
   return (
     <div>
-      <button onClick={signIn}>Sign in with Googlell</button>
-      <button onClick={() => signOut(auth)}>Sign Out</button>
+      {user ? (
+        <>
+          <p>Welcome, {user.displayName}!</p>
+          <button onClick={handleSignOut}>Sign Out</button>
+        </>
+      ) : (
+        <button onClick={handleGoogleSignIn}>Sign In with Google</button>
+      )}
     </div>
   );
 };
