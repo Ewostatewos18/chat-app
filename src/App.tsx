@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { auth } from "./firebase/firebase";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
