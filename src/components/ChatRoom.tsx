@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Auth from "./Auth/Auth";
 import Chat from "./Chat/chat";
 import { getAuth } from "firebase/auth";
