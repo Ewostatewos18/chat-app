@@ -1,32 +1,39 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { auth } from "./firebase/firebase"; // Import Firebase auth
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import Auth from "./components/Auth"; // Your login component
-import Chat from "./components/chat"; // Your chat component
+import { auth } from "./firebase/firebase";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Login from "./pages/Login";
+import Chat from "./components/Chat/chat";
+import "./App.css"; // optional for global styles
 
 function App() {
-  const [user, setUser] = useState(null);
+  // Explicitly define the type of `user` as `User | null`
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      setUser(currentUser); // `currentUser` is of type `User | null`
     });
 
-    return () => unsubscribe(); // Cleanup on unmount
+    return () => unsubscribe();
   }, []);
 
   return (
-    <div>
-      {user ? (
-        <div>
-          <button onClick={() => signOut(auth)}>Sign Out</button>
-          <Chat />
-        </div>
-      ) : (
-        <Auth />
-      )}
-    </div>
+    <Router>
+      <div className="app-container">
+        {user ? (
+          <>
+            <button className="signout-button" onClick={() => signOut(auth)}>Sign Out</button>
+            <Chat />
+          </>
+        ) : (
+          <Routes>
+            <Route path="*" element={<Login />} />
+          </Routes>
+        )}
+      </div>
+    </Router>
   );
 }
 

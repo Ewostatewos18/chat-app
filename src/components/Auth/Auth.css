@@ -1,0 +1,40 @@
+/* auth.css */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+    background-color: #f0f0f0;
+  }
+  
+  .signin-button, .signout-button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #4285F4;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  
+  .signin-button:hover, .signout-button:hover {
+    background-color: #357ae8;
+  }
+  
+  .signed-in {
+    text-align: center;
+  }
+  
+  .signin {
+    text-align: center;
+  }
+  
+  @media (max-width: 600px) {
+    .signin-button, .signout-button {
+      width: 100%;
+      padding: 15px;
+    }
+  }
+  

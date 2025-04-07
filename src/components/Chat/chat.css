@@ -1,0 +1,128 @@
+.chat-container {
+  font-family: Arial, sans-serif;
+  background-color: #f7f7f7;
+  padding: 20px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.chat-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.chat-list {
+  margin-bottom: 20px;
+}
+
+.user-button {
+  padding: 10px;
+  margin: 5px;
+  border: none;
+  background-color: #3498db;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.user-button:hover {
+  background-color: #2980b9;
+}
+
+.chat-with {
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.messages {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.message-bubble {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  max-width: 80%;
+}
+
+.own-message {
+  background-color: #e1f5fe;
+  margin-left: auto;
+  text-align: right;
+}
+
+.other-message {
+  background-color: #f0f0f0;
+  margin-right: auto;
+  text-align: left;
+}
+
+.message-sender {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.message-time {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.edit-button, .delete-button, .save-button, .cancel-button {
+  margin-top: 5px;
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.edit-button {
+  background-color: #f39c12;
+  color: white;
+}
+
+.delete-button {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.save-button, .cancel-button {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.send-button {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.send-button:hover {
+  background-color: #2980b9;
+}
+
+.input-section {
+  display: flex;
+  gap: 10px;
+}
+
+.message-input {
+  width: 80%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.edit-input input {
+  width: 80%;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
