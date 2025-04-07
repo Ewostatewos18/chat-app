@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import { auth } from "./firebase/firebase";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Login from "./pages/Login";
+// import Login from "./pages/Login";
 import Chat from "./components/Chat/chat";
 import "./App.css"; // optional for global styles
+import Auth from "./components/Auth/Auth";
 
 function App() {
   // Explicitly define the type of `user` as `User | null`
@@ -29,7 +30,7 @@ function App() {
           </>
         ) : (
           <Routes>
-            <Route path="*" element={<Login />} />
+            <Route path="*" element={<Auth />} />
           </Routes>
         )}
       </div>
