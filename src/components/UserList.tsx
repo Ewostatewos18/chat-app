@@ -42,7 +42,11 @@ const UserList = ({ onSelectUser }: { onSelectUser: (user: UserInfo) => void }) 
           photoURL: value.photoURL || '/default-avatar.png', // Default avatar if photoURL is missing
           isOnline: value.isOnline,
         }));
-      setUsers(formatted);
+
+      // Ensure no duplicate users based on `uid`
+      const uniqueUsers = Array.from(new Map(formatted.map(user => [user.uid, user])).values());
+
+      setUsers(uniqueUsers);  // Set unique users
       setLoading(false); // Set loading to false after fetching data
     });
 
@@ -58,15 +62,16 @@ const UserList = ({ onSelectUser }: { onSelectUser: (user: UserInfo) => void }) 
       ) : users.length > 0 ? (
         users.map((user) => (
           <div
-            key={user.uid}
+            key={user.uid}  // Ensure each user has a unique key
             className="user-item"
             onClick={() => onSelectUser(user)}
           >
             <img
-              src={user.photoURL || '/default-avatar.png'} // Ensure src is always a string
-              alt={user.displayName || 'User Avatar'}
-              className="avatar"
-            />
+         src={user.photoURL || '/default-avatar.png'} // Ensure src is always a string
+         alt={user.displayName || 'User Avatar'}
+         className="avatar"
+         />
+
             <div>
               <div>{user.displayName}</div>
               <div className={`status ${user.isOnline ? 'online' : 'offline'}`}>

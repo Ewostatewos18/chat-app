@@ -1,20 +1,22 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import { getDatabase, ref, push, onChildAdded, onChildChanged, onChildRemoved, update, remove } from 'firebase/database';
+import React, { useState,} from 'react';
+import {
+  getDatabase,
+  ref,
+  push,
+  onChildAdded,
+  onChildChanged,
+  onChildRemoved,
+  update,
+  remove,
+} from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import { app } from "../../firebase/firebase";
-import UserList from '../UserList';  // Assuming UserList is a child component where users are displayed
+import UserList from '../UserList';
 import './chat.css';
 
-// Define User and UserData types
 interface User {
   uid: string;
-  displayName: string;
-  photoURL: string | null;
-  isOnline: boolean;
-}
-
-interface UserData {
   displayName: string;
   photoURL: string | null;
   isOnline: boolean;
@@ -29,12 +31,6 @@ interface Message {
 }
 
 const ChatComponent = () => {
-  
-  const [users, setUsers] = useState<User[]>([]);  // Declare setUsers to update the users state
-  {users.map((user) => (
-    <div key={user.uid}>{user.displayName}</div>
-  ))}
-  
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,30 +42,14 @@ const ChatComponent = () => {
   const auth = getAuth(app);
   const user = auth.currentUser;
 
-  // Fetch users from Firebase
-  useEffect(() => {
-    const usersRef = ref(db, 'users');
-    onChildAdded(usersRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data && user) {
-        const userList = Object.entries(data).map(([uid, userData]: [string, unknown]) => {
-          const typedUserData = userData as UserData;
-          return { uid, ...typedUserData };
-        });
-
-        // Filter out the current user
-        setUsers(userList.filter((u) => u.uid !== user.uid)); 
-      }
-    });
-  }, [db, user]);
-
   // Generate consistent chat ID between two users
   const generateChatId = (receiverId: string) => {
     if (!user) return "";
-    return user.uid < receiverId ? `${user.uid}_${receiverId}` : `${receiverId}_${user.uid}`;
+    return user.uid < receiverId
+      ? `${user.uid}_${receiverId}`
+      : `${receiverId}_${user.uid}`;
   };
 
-  // Handle user selection to start chat
   const handleSelectUser = (receiver: User) => {
     const chatId = generateChatId(receiver.uid);
     setCurrentChatId(chatId);
@@ -77,8 +57,9 @@ const ChatComponent = () => {
     fetchMessages(chatId);
   };
 
-  // Fetch messages for the selected chat
   const fetchMessages = (chatId: string) => {
+    setMessages([]);
+
     const messagesRef = ref(db, `chats/${chatId}`);
     onChildAdded(messagesRef, (snapshot) => {
       const message = snapshot.val();
@@ -89,7 +70,11 @@ const ChatComponent = () => {
         senderId: message.senderId,
         senderName: message.senderName,
       };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+      setMessages((prev) => {
+        const exists = prev.find((msg) => msg.id === newMessage.id);
+        return exists ? prev : [...prev, newMessage];
+      });
     });
 
     onChildChanged(messagesRef, (snapshot) => {
@@ -102,13 +87,17 @@ const ChatComponent = () => {
         senderName: updatedMessage.senderName,
       };
       setMessages((prevMessages) =>
-        prevMessages.map((msg) => (msg.id === updatedMessageData.id ? updatedMessageData : msg))
+        prevMessages.map((msg) =>
+          msg.id === updatedMessageData.id ? updatedMessageData : msg
+        )
       );
     });
 
     onChildRemoved(messagesRef, (snapshot) => {
       const removedMessageId = snapshot.key!;
-      setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== removedMessageId));
+      setMessages((prev) =>
+        prev.filter((msg) => msg.id !== removedMessageId)
+      );
     });
   };
 
@@ -151,69 +140,91 @@ const ChatComponent = () => {
   };
 
   return (
-    <div className="chat-container">
-      <h2 className="chat-title">Chat App</h2>
+    <div className="chat-wrapper">
+      {/* Left Sidebar - User List */}
+      <div className="user-list-container">
+        <div className="current-user">
+          {user?.displayName || "Anonymous"}
+        </div>
+        <UserList onSelectUser={handleSelectUser} />
+      </div>
 
-      {/* Pass users array to UserList component */}
-      <UserList onSelectUser={handleSelectUser} />
+      {/* Right Chat Area */}
+      <div className="chat-area">
+        {selectedUser && (
+          <>
+            <h3 className="chat-with">
+             {selectedUser.displayName}
+            </h3>
 
-
-      {selectedUser && (
-        <>
-          <h3 className="chat-with">Chatting with: {selectedUser.displayName}</h3>
-
-          <div className="messages">
-            {messages.length > 0 ? (
-              messages.map((message) => {
-                const isCurrentUser = message.senderId === user?.uid;
-                return (
-                  <div key={message.id} className={`message-bubble ${isCurrentUser ? "own-message" : "other-message"}`}>
-                    <div className="message-sender">
-                      {isCurrentUser ? "You" : message.senderName}
-                    </div>
-                    <div>{message.text}</div>
-                    <div className="message-time">
-                      {new Date(message.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                    {isCurrentUser && (
-                      <>
-                        <button onClick={() => handleStartEdit(message.id, message.text)}>Edit</button>
-                        <button onClick={() => handleDeleteMessage(message.id)}>Delete</button>
-                      </>
-                    )}
-                    {editingMessageId === message.id && (
-                      <div>
-                        <input
-                          type="text"
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
-                        />
-                        <button onClick={() => handleUpdateMessage(message.id)}>Save</button>
-                        <button onClick={handleCancelEdit}>Cancel</button>
+            <div className="messages">
+              {messages.length > 0 ? (
+                messages.map((message) => {
+                  const isCurrentUser = message.senderId === user?.uid;
+                  return (
+                    <div
+                      key={message.id}
+                      className={`message-bubble ${
+                        isCurrentUser ? "own-message" : "other-message"
+                      }`}
+                    >
+                      <div className="message-sender">
+                        {isCurrentUser ? "You" : message.senderName}
                       </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <p>No messages yet</p>
-            )}
-          </div>
+                      <div>{message.text}</div>
+                      <div className="message-time">
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                      {isCurrentUser && (
+                        <>
+                          <button
+                            onClick={() =>
+                              handleStartEdit(message.id, message.text)
+                            }
+                          >
+                            Edit
+                          </button>
+                          <button onClick={() => handleDeleteMessage(message.id)}>
+                            Delete
+                          </button>
+                        </>
+                      )}
+                      {editingMessageId === message.id && (
+                        <div>
+                          <input
+                            type="text"
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                          />
+                          <button onClick={() => handleUpdateMessage(message.id)}>
+                            Save
+                          </button>
+                          <button onClick={handleCancelEdit}>Cancel</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <p>No messages yet</p>
+              )}
+            </div>
 
-          <div className="input-section">
-            <input
-              type="text"
-              placeholder="Type your message..."
-              value={newMessageText}
-              onChange={(e) => setNewMessageText(e.target.value)}
-            />
-            <button onClick={handleSendMessage}>Send</button>
-          </div>
-        </>
-      )}
+            <div className="input-section">
+              <input
+                type="text"
+                placeholder="Type your message..."
+                value={newMessageText}
+                onChange={(e) => setNewMessageText(e.target.value)}
+              />
+              <button onClick={handleSendMessage}>Send</button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
