@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { auth } from "./firebase/firebase";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 // import Login from "./pages/Login";
 import Chat from "./components/Chat/chat";
 import "./App.css"; // optional for global styles
-import Auth from "./components/Auth/Auth";
+// import Auth from "./components/Auth/Auth";
+import Login from "./components/Auth/Login";
 
 function App() {
   // Explicitly define the type of `user` as `User | null`
@@ -23,17 +24,18 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        {user ? (
+      
+          {user ? (
           <>
-            <button className="signout-button" onClick={() => signOut(auth)}>Sign Out</button>
             <Chat />
+         
           </>
         ) : (
           <Routes>
-            <Route path="*" element={<Auth />} />
+            <Route path="*" element={<Login />} />
           </Routes>
         )}
-      </div>
+        </div>
     </Router>
   );
 }
