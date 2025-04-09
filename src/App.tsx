@@ -1,21 +1,42 @@
 "use client";
 import { useState, useEffect } from "react";
 import { auth } from "./firebase/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-// import Login from "./pages/Login";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { getDatabase, ref, get } from "firebase/database";
+import { BrowserRouter as Router, Route, Routes, useNavigate } from "react-router-dom";
 import Chat from "./components/Chat/chat";
-import "./App.css"; // optional for global styles
-// import Auth from "./components/Auth/Auth";
+import "./App.css";
 import Login from "./components/Auth/Login";
 
+// A wrapper to access navigation outside Router
+const AuthenticatedApp = ({ user }: { user: User }) => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const db = getDatabase();
+    const userRef = ref(db, `users/${user.uid}`);
+
+    get(userRef).then((snapshot) => {
+      if (!snapshot.exists()) {
+        // User was deleted from database, force logout
+        signOut(auth).then(() => {
+          navigate("/login");
+        });
+      }
+    });
+  }, [user, navigate]);
+
+  return <Chat />;
+};
+
 function App() {
-  // Explicitly define the type of `user` as `User | null`
   const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false); // wait for auth to resolve
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser); // `currentUser` is of type `User | null`
+      setUser(currentUser);
+      setAuthChecked(true);
     });
 
     return () => unsubscribe();
@@ -24,18 +45,18 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-      
-          {user ? (
-          <>
-            <Chat />
-         
-          </>
-        ) : (
-          <Routes>
-            <Route path="*" element={<Login />} />
-          </Routes>
-        )}
-        </div>
+        {authChecked ? (
+          user ? (
+            <Routes>
+              <Route path="*" element={<AuthenticatedApp user={user} />} />
+            </Routes>
+          ) : (
+            <Routes>
+              <Route path="*" element={<Login />} />
+            </Routes>
+          )
+        ) : null}
+      </div>
     </Router>
   );
 }

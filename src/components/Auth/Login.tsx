@@ -16,6 +16,7 @@ import {
 } from 'firebase/database';
 import { useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
+import { updateProfile } from "firebase/auth";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -50,32 +51,40 @@ const Login = () => {
     }
   };
 
-  const handleEmailPasswordRegister = async () => {
-    try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      const user = result.user;
-      await handleUserData(user, username);
-      navigate('/');
-    } catch (error: unknown) {
-      setError(error instanceof Error ? 'Failed to register: ' + error.message : 'An unknown error occurred.');
-    }
-  };
+
+
+const handleEmailPasswordRegister = async () => {
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    const user = result.user;
+
+    await updateProfile(user, {
+      displayName: username,
+    });
+    await handleUserData(user, username);
+    navigate('/');
+  } catch (error: unknown) {
+    setError(error instanceof Error ? 'Failed to register: ' + error.message : 'An unknown error occurred.');
+  }
+};
+
 
   const handleUserData = async (user: any, username?: string) => {
     const userRef = ref(db, `users/${user.uid}`);
     await set(userRef, {
       displayName: username || user.displayName,
+      email: user.email, 
       photoURL: user.photoURL,
       isOnline: true,
       lastSeen: serverTimestamp(),
     });
-
+  
     onDisconnect(userRef).update({
       isOnline: false,
       lastSeen: serverTimestamp(),
     });
   };
-
+  
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-gray-100 px-4">
     <div className="w-full max-w-lg p-10 bg-white rounded-2xl shadow-2xl overflow-y-auto max-h-[90vh]">
