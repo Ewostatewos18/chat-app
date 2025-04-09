@@ -36,7 +36,7 @@ const UserList = ({ onSelectUser }: { onSelectUser: (user: UserInfo) => void }) 
         displayName: value.displayName?.split('@')[0] || 'Unknown',
         isOnline: value.isOnline,
         photoURL: value.photoURL || null,
-        email: value.email || "unknown@example.com",
+        email: value.email || "unknown@user.com",
       }));
 
       const filtered = formatted.filter((u) => u.uid !== currentUser.uid);
