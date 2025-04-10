@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, onDisconnect, set } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import { FiUser } from 'react-icons/fi';
 
@@ -10,7 +10,24 @@ interface UserInfo {
   isOnline: boolean;
   photoURL: string | null;
   email: string;
+  lastSeen?: number;
 }
+
+const formatLastSeen = (timestamp: number | null): string => {
+  if (!timestamp) return 'last seen recently';
+
+  const diff = Date.now() - timestamp;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (mins < 1) return 'last seen just now';
+  if (mins < 60) return `last seen ${mins}m ago`;
+  if (hours < 24) return `last seen ${hours}h ago`;
+  if (days < 7) return `last seen ${days}d ago`;
+
+  return 'last seen recently';
+};
 
 const UserList = ({ onSelectUser }: { onSelectUser: (user: UserInfo) => void }) => {
   const [users, setUsers] = useState<UserInfo[]>([]);
@@ -23,6 +40,29 @@ const UserList = ({ onSelectUser }: { onSelectUser: (user: UserInfo) => void }) 
   const auth = getAuth();
   const currentUser = auth.currentUser;
 
+  // Set current user online/offline status with lastSeen
+  useEffect(() => {
+    if (!currentUser) return;
+    const userRef = ref(db, `users/${currentUser.uid}`);
+    
+    set(userRef, {
+      displayName: currentUser.displayName?.split('@')[0] || 'You',
+      email: currentUser.email || '',
+      photoURL: currentUser.photoURL || null,
+      isOnline: true,
+      lastSeen: Date.now(),
+    });
+
+    onDisconnect(userRef).set({
+      displayName: currentUser.displayName?.split('@')[0] || 'You',
+      email: currentUser.email || '',
+      photoURL: currentUser.photoURL || null,
+      isOnline: false,
+      lastSeen: Date.now(),
+    });
+  }, [currentUser]);
+
+  // Fetch all users from Firebase
   useEffect(() => {
     if (!currentUser) return;
 
@@ -37,6 +77,7 @@ const UserList = ({ onSelectUser }: { onSelectUser: (user: UserInfo) => void }) 
         isOnline: value.isOnline,
         photoURL: value.photoURL || null,
         email: value.email || "unknown@user.com",
+        lastSeen: value.lastSeen || null,
       }));
 
       const filtered = formatted.filter((u) => u.uid !== currentUser.uid);
@@ -48,6 +89,7 @@ const UserList = ({ onSelectUser }: { onSelectUser: (user: UserInfo) => void }) 
     });
   }, [currentUser]);
 
+  // Filter users by search
   useEffect(() => {
     const results = users.filter((user) =>
       user.displayName.toLowerCase().includes(search.toLowerCase())
@@ -104,7 +146,12 @@ const UserList = ({ onSelectUser }: { onSelectUser: (user: UserInfo) => void }) 
                         </span>
                       )}
                     </div>
-                    <div className="text-gray-800 font-medium">{user.displayName}</div>
+                    <div className="flex flex-col">
+                      <div className="text-gray-800 font-medium">{user.displayName}</div>
+                      <div className="text-xs text-gray-500">
+                        {user.isOnline ? 'online' : formatLastSeen(user.lastSeen || null)}
+                      </div>
+                    </div>
                   </div>
                   <div
                     className={`w-2.5 h-2.5 rounded-full mt-1 mr-1 ${
@@ -145,7 +192,7 @@ const UserList = ({ onSelectUser }: { onSelectUser: (user: UserInfo) => void }) 
 
           <button
             className="mt-4 w-full py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-            onClick={() => auth.signOut()}
+            onClick={() => getAuth().signOut()}
           >
             Log out
           </button>

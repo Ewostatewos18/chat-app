@@ -16,6 +16,13 @@ import UserList from "./UserList";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import { format, isToday, isYesterday, parseISO } from "date-fns";
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import calendar from 'dayjs/plugin/calendar';
+
+dayjs.extend(relativeTime);
+dayjs.extend(calendar);
+
 
 interface User {
   uid: string;
@@ -23,6 +30,7 @@ interface User {
   email?: string;
   photoURL: string | null;
   isOnline: boolean;
+  lastSeen?: number;
 }
 
 interface Message {
@@ -172,10 +180,6 @@ const ChatComponent = () => {
     setContextMenu({ x: e.clientX, y: e.clientY, messageId: id });
   };
 
-  // const handleLogout = () => {
-  //   signOut(auth);
-  // };
-
   const handleEmojiSelect = (emoji: any) => {
     const emojiChar = emoji.native;
     if (editingMessageId) {
@@ -189,10 +193,6 @@ const ChatComponent = () => {
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div className="w-full md:w-1/3 lg:w-1/4 border-r border-gray-200 p-4 bg-white">
-        {/* <div className="flex justify-between items-center mb-4">
-          <div className="font-semibold text-lg">{user?.displayName || "Anonymous"}</div>
-          <button onClick={handleLogout} className="text-sm text-red-500 hover:underline">Logout</button>
-        </div> */}
         <UserList onSelectUser={handleSelectUser} />
       </div>
 
@@ -206,7 +206,16 @@ const ChatComponent = () => {
               <div>
                 <div className="text-sm font-semibold text-gray-800">{selectedUser.displayName}</div>
                 <div className={`text-xs ${selectedUser.isOnline ? "text-green-500" : "text-gray-400"}`}>
-                  {selectedUser.isOnline ? "online" : "offline"}
+                {selectedUser.isOnline
+    ? "Online"
+    : selectedUser.lastSeen
+    ? `Last seen ${dayjs(selectedUser.lastSeen).calendar(null, {
+        sameDay: '[at] h:mm A',
+        lastDay: '[yesterday at] h:mm A',
+        lastWeek: '[on] MMM D [at] h:mm A',
+        sameElse: '[on] MMM D [at] h:mm A',
+      })}`
+    : "Last seen long time ago"}
                 </div>
               </div>
             </div>
@@ -340,8 +349,18 @@ const ChatComponent = () => {
                   <h2 className="text-xl font-semibold text-gray-900">{selectedUser.displayName}</h2>
                   <p className="text-sm text-gray-500">{selectedUser.email || "No email available"}</p>
                   <span className={`text-sm font-medium ${selectedUser.isOnline ? "text-green-500" : "text-gray-400"}`}>
-                    {selectedUser.isOnline ? "Online" : "Last seen recently"}
-                  </span>
+  {selectedUser.isOnline
+    ? "Online"
+    : selectedUser.lastSeen
+    ? `Last seen ${dayjs(selectedUser.lastSeen).calendar(null, {
+        sameDay: '[at] h:mm A',
+        lastDay: '[yesterday at] h:mm A',
+        lastWeek: '[on] MMM D [at] h:mm A',
+        sameElse: '[on] MMM D [at] h:mm A',
+      })}`
+    : "Last seen long time ago"}
+</span>
+
                 </div>
                 <div className="px-6 mt-4 flex flex-col gap-2">
                   <button className="w-full border border-gray-200 hover:bg-gray-100 text-sm text-gray-700 py-2 rounded-md">Block User</button>

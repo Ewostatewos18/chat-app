@@ -65,7 +65,7 @@ const handleEmailPasswordRegister = async () => {
     navigate('/');
   } catch (error: unknown) {
     setError(error instanceof Error ? 'Failed to register: ' + error.message : 'An unknown error occurred.');
-  }
+  }  
 };
 
 
