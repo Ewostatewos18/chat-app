@@ -201,24 +201,43 @@ const ChatComponent = () => {
         {selectedUser ? (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 bg-white shadow-sm flex items-center gap-3 cursor-pointer" onClick={() => setShowProfileModal(true)}>
-              <img src={selectedUser.photoURL || "/default-avatar.png"} alt={selectedUser.displayName} className="w-10 h-10 rounded-full object-cover" />
-              <div>
-                <div className="text-sm font-semibold text-gray-800">{selectedUser.displayName}</div>
-                <div className={`text-xs ${selectedUser.isOnline ? "text-green-500" : "text-gray-400"}`}>
-                {selectedUser.isOnline
-    ? "Online"
-    : selectedUser.lastSeen
-    ? `Last seen ${dayjs(selectedUser.lastSeen).calendar(null, {
-        sameDay: '[at] h:mm A',
-        lastDay: '[yesterday at] h:mm A',
-        lastWeek: '[on] MMM D [at] h:mm A',
-        sameElse: '[on] MMM D [at] h:mm A',
-      })}`
-    : "Last seen long time ago"}
-                </div>
-              </div>
-            </div>
+       {/* Header */}
+<div
+  className="p-4 border-b border-gray-200 bg-white shadow-sm flex items-center gap-4 cursor-pointer"
+  onClick={() => setShowProfileModal(true)}
+>
+  <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 shadow">
+    {selectedUser.photoURL ? (
+      <img
+        src={selectedUser.photoURL}
+        alt="User Avatar"
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <div className="w-full h-full flex items-center justify-center text-2xl text-gray-500">
+        {selectedUser.displayName?.charAt(0).toUpperCase()}
+      </div>
+    )}
+  </div>
+
+  <div className="flex flex-col justify-center">
+    <div className="text-base font-semibold text-gray-800">
+      {selectedUser.displayName}
+    </div>
+    <div className={`text-xs ${selectedUser.isOnline ? "text-green-500" : "text-gray-400"}`}>
+      {selectedUser.isOnline
+        ? "Online"
+        : selectedUser.lastSeen
+        ? `Last seen ${dayjs(selectedUser.lastSeen).calendar(null, {
+            sameDay: '[at] h:mm A',
+            lastDay: '[yesterday at] h:mm A',
+            lastWeek: '[on] MMM D [at] h:mm A',
+            sameElse: '[on] MMM D [at] h:mm A',
+          })}`
+        : "Last seen long time ago"}
+    </div>
+  </div>
+</div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-gray-50">
@@ -345,7 +364,20 @@ const ChatComponent = () => {
                   <div className="w-6"></div>
                 </div>
                 <div className="p-6 flex flex-col items-center text-center space-y-4">
-                  <img src={selectedUser.photoURL || "/default-avatar.png"} alt="avatar" className="w-24 h-24 rounded-full object-cover shadow" />
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 shadow">
+  {selectedUser.photoURL ? (
+    <img
+      src={selectedUser.photoURL}
+      alt="User Avatar"
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center text-4xl text-gray-500">
+      {selectedUser.displayName?.charAt(0).toUpperCase()}
+    </div>
+  )}
+</div>
+
                   <h2 className="text-xl font-semibold text-gray-900">{selectedUser.displayName}</h2>
                   <p className="text-sm text-gray-500">{selectedUser.email || "No email available"}</p>
                   <span className={`text-sm font-medium ${selectedUser.isOnline ? "text-green-500" : "text-gray-400"}`}>
