@@ -64,6 +64,12 @@ const ChatComponent = () => {
     return format(date, "MMMM d");
   };
 
+  // useEffect(() => {
+  //   const handleClickOutside = () => setContextMenu(null);
+  //   window.addEventListener("click", handleClickOutside);
+  //   return () => window.removeEventListener("click", handleClickOutside);
+  // }, []);
+  
   const generateChatId = (receiverId: string) => {
     if (!user) return "";
     return user.uid < receiverId ? `${user.uid}_${receiverId}` : `${receiverId}_${user.uid}`;
@@ -174,11 +180,27 @@ const ChatComponent = () => {
     remove(ref(db, `/chats/${currentChatId}/${id}`));
     setContextMenu(null);
   };
-
   const handleRightClick = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY, messageId: id });
+  
+    const menuWidth = 140;  // Approximate width of the context menu
+    const menuHeight = 80;  // Approximate height of the context menu
+    const padding = 10;
+  
+    let x = e.clientX;
+    let y = e.clientY;
+  
+    if (x + menuWidth > window.innerWidth) {
+      x = window.innerWidth - menuWidth - padding;
+    }
+  
+    if (y + menuHeight > window.innerHeight) {
+      y = window.innerHeight - menuHeight - padding;
+    }
+  
+    setContextMenu({ x, y, messageId: id });
   };
+  
 
   const handleEmojiSelect = (emoji: any) => {
     const emojiChar = emoji.native;
@@ -200,7 +222,7 @@ const ChatComponent = () => {
       <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col relative">
         {selectedUser ? (
           <>
-            {/* Header */}
+       
        {/* Header */}
 <div
   className="p-4 border-b border-gray-200 bg-white shadow-sm flex items-center gap-4 cursor-pointer"
@@ -255,42 +277,60 @@ const ChatComponent = () => {
                     {groupMsgs.map((message) => {
                       const isCurrentUser = message.senderId === user?.uid;
                       const isEditing = editingMessageId === message.id;
+                      
 
                       return (
                         <div
-                          key={message.id}
-                          className={`max-w-[70%] px-4 py-2 rounded-xl shadow-sm text-sm ${
-                            isCurrentUser
-                              ? "ml-auto bg-blue-100 text-blue-900"
-                              : "mr-auto bg-white text-gray-800 border border-gray-200"
-                          }`}
-                          onContextMenu={(e) => isCurrentUser && handleRightClick(e, message.id)}
+                        key={message.id}
+                        className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+                        onContextMenu={(e) => isCurrentUser && handleRightClick(e, message.id)}
+                      >
+                        <div
+                          className={`max-w-[75%] px-4 py-2 rounded-xl shadow-sm text-sm break-words
+                            ${isCurrentUser 
+                              ? "bg-blue-100 text-blue-900" 
+                              : "bg-white text-gray-800 border border-gray-200"
+                            }`}
                         >
-                          {isEditing ? (
-                            <>
-                              <input
-                                type="text"
-                                value={editText}
-                                onChange={(e) => setEditText(e.target.value)}
-                                className="w-full p-1 rounded border border-gray-300"
-                              />
-                              <div className="flex justify-between mt-1">
-                                <button onClick={() => handleUpdateMessage(message.id)} className="text-xs text-green-600">Save</button>
-                                <button onClick={() => setEditingMessageId(null)} className="text-xs text-gray-500">Cancel</button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <p>{message.text}</p>
-                              <div className="text-[10px] text-gray-400 text-right mt-1">
-                                {new Date(message.createdAt).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </div>
-                            </>
-                          )}
+                       {isEditing ? (
+  <div className="space-y-1">
+    <input
+      type="text"
+      value={editText}
+      onChange={(e) => setEditText(e.target.value)}
+      className="w-full p-1 rounded border border-gray-300 text-sm"
+      autoFocus
+    />
+    <div className="flex items-center justify-end gap-2 text-xs">
+      <button
+        onClick={() => handleUpdateMessage(message.id)}
+        className="text-green-600 hover:underline"
+      >
+        Save
+      </button>
+      <button
+        onClick={() => setEditingMessageId(null)}
+        className="text-gray-500 hover:underline"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+) : (
+  <>
+    <p>{message.text}</p>
+    <div className="text-[10px] text-gray-400 text-right mt-1">
+      {new Date(message.createdAt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}
+    </div>
+  </>
+)}
+
                         </div>
+                      </div>
+                      
                       );
                     })}
                   </div>
@@ -301,18 +341,43 @@ const ChatComponent = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Context Menu */}
-            {contextMenu && (
-              <div className="absolute z-50 bg-white border rounded-md shadow-md text-sm" style={{ top: contextMenu.y, left: contextMenu.x }}>
-                <button onClick={() => handleStartEdit(contextMenu.messageId, messages.find((m) => m.id === contextMenu.messageId)?.text || "")}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100">Edit</button>
-                <button onClick={() => handleDeleteMessage(contextMenu.messageId)}
-                        className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100">Delete</button>
-              </div>
-            )}
+{/* Context Menu */}
+{contextMenu && (
+  <div
+    className="fixed z-50 bg-white border border-gray-200 rounded-md shadow-lg text-sm"
+    style={{ top: contextMenu.y, left: contextMenu.x }}
+    onMouseLeave={() => setContextMenu(null)}
+  >
+    <button
+      className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+      onClick={() => {
+        const message = messages.find((msg) => msg.id === contextMenu.messageId);
+        if (message) {
+          handleStartEdit(message.id, message.text);
+          setContextMenu(null);
+        }
+      }}
+    >
+      ✏️ Edit
+    </button>
+    <button
+      className="w-full px-4 py-2 hover:bg-gray-100 text-left text-red-600"
+      onClick={() => {
+        handleDeleteMessage(contextMenu.messageId);
+        setContextMenu(null);
+      }}
+    >
+      🗑️ Delete
+    </button>
+  </div>
+)}
+
+          
+                     
 
             {/* Message Input */}
             <div className="p-4 border-t border-gray-200 bg-white">
+              
               <div className="flex gap-2 relative items-center">
                 <input
                   type="text"
@@ -351,7 +416,9 @@ const ChatComponent = () => {
                           d="M3.75 21L20.25 12 3.75 3v7.5l12 1.5-12 1.5V21z"/>
                   </svg>
                 </button>
+                
               </div>
+              
             </div>
 
             {/* Profile Modal */}
